@@ -1,7 +1,9 @@
 ﻿namespace ITS.Prometeo.Infrastructure.Persistence;
 
+using Dapper;
 using ITS.Prometeo.ApplicationCore.Entities;
 using ITS.Prometeo.ApplicationCore.Persistence;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -21,18 +23,53 @@ internal class WeatherDetectionSqlRepository : IWeatherDetectionRepository
         throw new NotImplementedException();
     }
 
-    public Task<WeatherDetection?> GetByIdAsync(long id)
+    public async Task<WeatherDetection?> GetByIdAsync(long id)
     {
-        throw new NotImplementedException();
+        const string query = """
+            SELECT 
+                [id],
+                [weather_station_id],
+                [detection_type],
+                [value],
+                [date]
+            FROM [Pascolat_WeatherDetection] WHERE [id] = @id;
+            """;
+        using var connection = new SqlConnection(_connectionString);
+        return await connection.QueryFirstOrDefaultAsync<WeatherDetection>(query, new {id});
     }
 
-    public Task<IEnumerable<WeatherDetection>> GetListAsync()
+    public async Task<IEnumerable<WeatherDetection>> GetListAsync()
     {
-        throw new NotImplementedException();
+        const string query = """
+            SELECT 
+                [id],
+                [weather_station_id],
+                [detection_type],
+                [value],
+                [date]
+            FROM [Pascolat_WeatherDetection]
+            """;
+        using var connection = new SqlConnection(_connectionString);
+        return await connection.QueryAsync<WeatherDetection>(query); 
+
     }
 
-    public Task InsertAsync(WeatherDetection detection)
+    public async Task InsertAsync(WeatherDetection detection)
     {
-        throw new NotImplementedException();
+        const string query = """
+            INSERT INTO [Pascolat_WeatherDetection] (
+                 [weather_station_id],
+                 [detection_type],
+                 [value],
+                 [date])
+            VALUES
+            (
+                @WeatherStationId,
+                @Type,
+                @Value,
+                @Date);
+            """;
+        using var connection = new SqlConnection( _connectionString );
+        await connection.ExecuteAsync(query, detection);
     }
 }

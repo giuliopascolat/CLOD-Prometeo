@@ -1,7 +1,9 @@
 ﻿namespace ITS.Prometeo.Infrastructure.Persistence;
 
+using Dapper;
 using ITS.Prometeo.ApplicationCore.Entities;
 using ITS.Prometeo.ApplicationCore.Persistence;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -22,19 +24,61 @@ internal class WeatherStationsSqlRepository : IWeatherStationsRepository
         throw new NotImplementedException();
     }
 
-    public Task<WeatherStation?> GetByIdAsync(int id)
+    public async Task<WeatherStation?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        const string query = """
+            SELECT 
+                [id]           as Id,
+                [name]         as Name,
+                [altitude]     as Altitude,
+                [longitude]   as Longitude,
+                [latitude]     as Latitude,
+                [station_type] as StationType
+            FROM [Pascolat_WeatherStation] WHERE Id = @id
+            """;
+
+        using var connection = new SqlConnection(_connectionString);
+        return await connection.QueryFirstOrDefaultAsync<WeatherStation>(query,new {id});
+
     }
 
-    public Task<IEnumerable<WeatherStation>> GetListAsync()
+    public async Task<IEnumerable<WeatherStation>> GetListAsync()
     {
-        throw new NotImplementedException();
+        const string query = """
+            SELECT 
+                [id]           as Id,
+                [name]         as Name,
+                [altitude]     as Altitude,
+                [longitude]   as Longitude,
+                [latitude]     as Latitude,
+                [station_type] as StationType
+            FROM [Pascolat_WeatherStation]
+            """;
+
+        using var connection = new SqlConnection(_connectionString);
+        return await connection.QueryAsync<WeatherStation>(query);
+
     }
 
-    public Task InsertAsync(WeatherStation station)
+    public async Task InsertAsync(WeatherStation station)
     {
-        throw new NotImplementedException();
+        const string query = """
+                INSERT INTO [Pascolat_WeatherStation] (
+                    [name],
+                    [altitude],
+                    [longitude],
+                    [latitude],
+                    [station_type])
+                VALUES (
+                    @Name,
+                    @Altitude,
+                    @Longitude,
+                    @Latitude,
+                    @StationType);
+                """;
+
+        using var connection = new SqlConnection(_connectionString);
+        await connection.ExecuteAsync(query, station);
     }
 
     public Task UpdateAsync(WeatherStation station)
